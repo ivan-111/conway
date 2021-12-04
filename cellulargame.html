@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Game</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <h1 id="myHeading">Conway's cellular automaton (aka "game of life")</h1>
+
+    <p id="rules" style="font-size:160%;"> 
+        <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">(Here is a description of what it is.)</a>
+    </p> 
+
+    <p id="selectSize" style="font-size:160%;"> 
+        Select the size of the field (it should not exceed 50x50)
+    </p> 
+
+    <p id="lines" style="font-size:160%;" > 
+        Number of lines 
+        <input id="inputLines" type="text" value="30" style="font-size:120%;"> </input >    
+    </p>
+
+    <p id="columns" style="font-size:160%;" >
+        Number of columns 
+        <input id="inputColumns" type="text" value="30" style="font-size:120%;"> </input > 
+    </p>
+
+    <p> <button id="submitSize"> </button></p>
+    
+    <p id="description" style="font-size:160%; display:none"> 
+        Gray cells are empty ("dead"), red cells are filled ("alive"). To draw an initial pattern, click a cell you want to add. 
+        To draw continiously like in Paint, hold mouse button. 
+        To enable/disable the erasing mode, click the button "Switch creating/erasing". 
+        To start/pause simulation, click the button "Start/pause".  
+        To return to your initial pattern, click the button "Return to start". You can then edit the initial pattern.
+        To start completely over, refresh the page. 
+    </p> 
+
+    <script>
+
+    let numOfLines;
+    let numOfColumns; 
+
+    function mmain() {
+
+        document.getElementById("description").style.display = "block"; 
+
+        //CREATING-ERASING BUTTON
+        let creating = 1;  
+
+        let drawingButton = document.createElement("button");
+        drawingButton.textContent = "Switch creating/erasing"; 
+        drawingButton.style.background = "#8AABCC";
+        drawingButton.style.fontSize = "large";
+        drawingButton.style.height = '40px';
+        drawingButton.style.width = '250px';
+        drawingButton.addEventListener("click", () => {
+            creating = 1 - creating; 
+            drawingButton.style.background = "#F83005";
+            setTimeout(() => {drawingButton.style.background = "#8AABCC";}, 30); 
+        });
+
+        document.body.appendChild(drawingButton);
+        document.body.appendChild(document.createElement("br"));
+
+        //BUILD THE FIELD
+        let mousePressed = 0;
+        let field = [];
+
+        for(let i=0; i<numOfLines; i++) {
+            field[i] = [];
+            for(let j=0; j<numOfColumns; j++) {
+                field[i][j]=0;
+            }
+        }
+
+        let par = document.createElement('p');
+        par.setAttribute("id", "field"); 
+        document.body.appendChild(par);
+        par.style.lineHeight = '0px';
+
+        for(let i=0; i<numOfLines; i++) {
+
+            for(let j=0; j<numOfColumns; j++) {
+                let cell = document.createElement("button");
+                cell.setAttribute("id", (i*numOfColumns + j).toString(10)); 
+                cell.style.background = "#E1DFDE";
+                cell.style.height = '20px';
+                cell.style.width = '20px';
+                par.appendChild(cell);
+
+                cell = document.getElementById((i*numOfColumns + j).toString(10)); 
+
+                cell.addEventListener("mousedown", () => {
+                    mousePressed = 1;
+                    if (field[i][j] == 0 && creating == 1) {
+                        field[i][j] = 1;
+                        cell.style.background = "#F83005";
+                    }
+                    if (field[i][j] == 1 && creating == 0) {
+                        field[i][j] = 0;
+                        cell.style.background = "#E1DFDE";
+                    }
+                });
+
+                cell.addEventListener("mouseup", () => {
+                    mousePressed = 0;
+                });
+
+                cell.addEventListener("mouseover", () => {
+
+                    if (field[i][j] == 0 && mousePressed == 1 && creating == 1) {
+                        field[i][j] = 1;
+                        cell.style.background = "#F83005";
+                    }
+                    if (field[i][j] == 1 && mousePressed == 1 && creating == 0) {
+                        field[i][j] = 0;
+                        cell.style.background = "#E1DFDE";
+                    }
+
+                });
+
+            }
+
+            par.appendChild(document.createElement("br"));
+
+        }
+
+        par.addEventListener("mouseleave", () => {mousePressed = 0;});
+
+        //TRANSFORMATION
+
+        function step(field) {
+
+            let newfield = [];
+
+            for(let i=0; i<numOfLines; i++) newfield[i] = [];
+
+            for(let i=0; i<numOfLines; i++) {
+                for(let j=0; j<numOfColumns; j++) {
+
+                    let neighbours = 0; 
+
+                    if (i>0 && j>0) neighbours += field[i-1][j-1]; 
+                    if (i>0 && j<numOfColumns-1) neighbours += field[i-1][j+1]; 
+                    if (i<numOfLines-1 && j>0) neighbours += field[i+1][j-1]; 
+                    if (i<numOfLines-1 && j<numOfColumns-1) neighbours += field[i+1][j+1]; 
+
+                    if (i>0) neighbours += field[i-1][j];
+                    if (i<numOfLines-1) neighbours += field[i+1][j];
+                    if (j>0) neighbours += field[i][j-1];
+                    if (j<numOfColumns-1) neighbours += field[i][j+1];
+                                
+                    newfield[i][j] = 0;    
+
+                    if (neighbours == 2 || neighbours == 3) {
+                        if (field[i][j] == 1) {
+                            newfield[i][j] = 1;
+                        }
+                    }
+
+                    if (neighbours == 3 && field[i][j] == 0) {
+                        newfield[i][j] = 1;  
+                    }
+
+                    //alert(newfield[i][j]);
+
+                }
+            }
+
+            return newfield;
+
+        }
+
+        //START BUTTON
+        let simulation = 0; 
+        let startbtn = document.createElement("button");
+        startbtn.textContent = "Start/pause simulation"; 
+        startbtn.style.background = "#8AABCC";
+        startbtn.style.fontSize = "large";
+        startbtn.style.height = '40px';
+        startbtn.style.width = '250px';
+
+        let ongoing; 
+        let startingfield;
+        let frst=0; 
+        startbtn.addEventListener("click", () => {
+            if (frst == 0) startingfield = field; 
+            frst++; 
+            simulation = 1 - simulation; 
+
+            startbtn.style.background = "#F83005";
+            setTimeout(() => {startbtn.style.background = "#8AABCC";}, 30); 
+
+            if (simulation == 1) {
+                
+                creating = -1;
+
+                ongoing = setInterval(() => {
+
+                    field = step(field);
+            
+                    for(let i=0; i<numOfLines; i++) {
+                        for(let j=0; j<numOfColumns; j++) {
+                            let tmp = document.getElementById((i*numOfColumns + j).toString(10)); 
+                            if (field[i][j] == 0) tmp.style.background = "#E1DFDE";  
+                            else tmp.style.background = "#F83005";
+                        }
+                    }
+            
+                }, 500);
+            }
+            
+            else clearInterval(ongoing);
+
+        }); 
+
+        document.body.appendChild(startbtn);
+
+        let goback = document.createElement("button");
+        goback.textContent = "Return to start"; 
+        goback.style.background = "#8AABCC";
+        goback.style.fontSize = "large";
+        goback.style.height = '40px';
+        goback.style.width = '250px';
+        goback.addEventListener("click", () => {
+            simulation = 0;
+            creating = 1; 
+            frst = 0; 
+            clearInterval(ongoing);
+
+            goback.style.background = "#F83005";
+            setTimeout(() => {goback.style.background = "#8AABCC";}, 30); 
+
+            for(let i=0; i<numOfLines; i++) {
+                for(let j=0; j<numOfColumns; j++) {
+                    let tmp1 = document.getElementById((i*numOfColumns + j).toString(10)); 
+                    if (startingfield[i][j] == 0) tmp1.style.background = "#E1DFDE";  
+                    else tmp1.style.background = "#F83005";
+                }
+            }
+            field = startingfield; 
+        });
+
+        document.body.appendChild(goback);
+    }    
+
+    let submitSize = document.getElementById("submitSize"); 
+    submitSize.textContent = "Submit"; 
+    submitSize.style.background = "#8AABCC";
+    submitSize.style.fontSize = "large";
+    submitSize.style.height = '40px';
+    submitSize.style.width = '150px';
+
+    submitSize.addEventListener("click", async function setSize() {
+
+        submitSize.style.background = "#F83005"; 
+
+        let promise = new Promise((resolve, reject) => {
+            setTimeout(() => {
+                submitSize.style.background = "#8AABCC"; 
+                resolve();        
+            }, 30);
+        });
+
+        await promise;    
+
+        numOfLines = document.getElementById("inputLines").value;
+        numOfColumns = document.getElementById("inputColumns").value;
+
+        if (numOfColumns > 50 || numOfLines > 50) alert("The size is too large");         
+        else {
+
+            document.getElementById("selectSize").style.display = 'none';
+            document.getElementById("lines").style.display = 'none';
+            document.getElementById("columns").style.display = 'none';
+            document.getElementById("submitSize").style.display = 'none';
+
+            mmain(); 
+
+        }
+
+    });
+
+    </script>
+
+  </body>
+</html>
