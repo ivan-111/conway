@@ -32,7 +32,8 @@
         To draw continiously like in Paint, hold mouse button. 
         To enable/disable the erasing mode, click the button "Switch creating/erasing". 
         To start/pause simulation, click the button "Start/pause".  
-        To return to your initial pattern, click the button "Return to start". You can then edit the initial pattern.
+        To return to your initial pattern, click the button "Return to start", you can then edit the initial pattern.
+        To erase all patterns, click "Erase all".  
         To start completely over, refresh the page. 
     </p> 
 
@@ -243,6 +244,33 @@
         });
 
         document.body.appendChild(goback);
+
+        let eraseAll = document.createElement("button");
+        eraseAll.textContent = "Erase all"; 
+        eraseAll.style.background = "#8AABCC";
+        eraseAll.style.fontSize = "large";
+        eraseAll.style.height = '40px';
+        eraseAll.style.width = '250px';
+        eraseAll.addEventListener("click", () => {
+            simulation = 0;
+            creating = 1; 
+            frst = 0; 
+            clearInterval(ongoing);
+
+            eraseAll.style.background = "#F83005";
+            setTimeout(() => {eraseAll.style.background = "#8AABCC";}, 30); 
+
+            for(let i=0; i<numOfLines; i++) {
+                for(let j=0; j<numOfColumns; j++) {
+                    field[i][j] = 0; 
+                    document.getElementById((i*numOfColumns + j).toString(10)).style.background = "#E1DFDE";  ; 
+                }
+            }
+        });
+        document.body.appendChild(eraseAll);
+
+
+
     }    
 
     let submitSize = document.getElementById("submitSize"); 
@@ -268,9 +296,11 @@
         numOfLines = document.getElementById("inputLines").value;
         numOfColumns = document.getElementById("inputColumns").value;
 
-        if (numOfColumns > 50 || numOfLines > 50) alert("The size is too large");         
-        else {
+        if (numOfColumns > 50 || numOfLines > 50) alert("The size is too large");
+        if (numOfColumns <= 0 || numOfLines <= 0) alert("That's funny");         
+        if (numOfColumns > 0  && numOfColumns <= 50 && numOfLines > 0 && numOfLines <= 50) {
 
+            //document.getElementById(id).style.display = 'block';
             document.getElementById("selectSize").style.display = 'none';
             document.getElementById("lines").style.display = 'none';
             document.getElementById("columns").style.display = 'none';
